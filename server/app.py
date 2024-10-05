@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 from flask import Flask, request, make_response
 from flask_migrate import Migrate
@@ -23,7 +22,6 @@ api = Api(app)
 def index():
     return '<h1>Code challenge</h1>'
 
-
 class HeroListResource(Resource):
     def get(self):
         heroes = Hero.query.all()
@@ -31,9 +29,11 @@ class HeroListResource(Resource):
 
 class HeroResource(Resource):
     def get(self, id):
-        hero = Hero.query.get(id)
+        # Use db.session.get() to retrieve the hero by ID
+        hero = db.session.get(Hero, id)
         if hero:
-            return hero.to_dict(), 200
+            # Include hero_powers when retrieving a single hero
+            return hero.to_dict(include_powers=True), 200
         return {'error': 'Hero not found'}, 404
 
 class PowerListResource(Resource):
@@ -43,13 +43,14 @@ class PowerListResource(Resource):
 
 class PowerResource(Resource):
     def get(self, id):
-        power = Power.query.get(id)
+        # Use db.session.get() to retrieve the power by ID
+        power = db.session.get(Power, id)
         if power:
             return power.to_dict(), 200
         return {'error': 'Power not found'}, 404
 
     def patch(self, id):
-        power = Power.query.get(id)
+        power = db.session.get(Power, id)  # Use db.session.get() here too
         if not power:
             return {'error': 'Power not found'}, 404
 
@@ -76,7 +77,6 @@ class HeroPowerResource(Resource):
         except ValueError as e:
             return {'errors': [str(e)]}, 400
 
-
 api.add_resource(HeroListResource, '/heroes')
 api.add_resource(HeroResource, '/heroes/<int:id>')
 api.add_resource(PowerListResource, '/powers')
@@ -85,4 +85,3 @@ api.add_resource(HeroPowerResource, '/hero_powers')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
-
