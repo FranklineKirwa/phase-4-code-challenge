@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
 
 metadata = MetaData(naming_convention={
@@ -10,38 +9,38 @@ metadata = MetaData(naming_convention={
 
 db = SQLAlchemy(metadata=metadata)
 
-
 class Hero(db.Model, SerializerMixin):
     __tablename__ = 'heroes'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    super_name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    super_name = db.Column(db.String, nullable=False)
 
-    # add relationship
-
-    # add serialization rules
+    # Serialization rules
+    serialize_only = ('id', 'name', 'super_name')
 
     def __repr__(self):
         return f'<Hero {self.id}>'
-
 
 class Power(db.Model, SerializerMixin):
     __tablename__ = 'powers'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
 
-    # add relationship
+    # Serialization rules
+    serialize_only = ('id', 'name', 'description')
 
-    # add serialization rules
-
-    # add validation
+    # Validation
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name or len(name) < 1:
+            raise ValueError('Power name must not be empty')
+        return name
 
     def __repr__(self):
         return f'<Power {self.id}>'
-
 
 class HeroPower(db.Model, SerializerMixin):
     __tablename__ = 'hero_powers'
@@ -49,11 +48,22 @@ class HeroPower(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     strength = db.Column(db.String, nullable=False)
 
-    # add relationships
+    # Relationships
+    hero_id = db.Column(db.Integer, db.ForeignKey('heroes.id'), nullable=False)
+    power_id = db.Column(db.Integer, db.ForeignKey('powers.id'), nullable=False)
 
-    # add serialization rules
+    hero = db.relationship('Hero', backref='hero_powers')
+    power = db.relationship('Power', backref='hero_powers')
 
-    # add validation
+    # Serialization rules
+    serialize_only = ('id', 'strength', 'hero_id', 'power_id')
+
+    # Validation
+    @validates('strength')
+    def validate_strength(self, key, strength):
+        if not strength or len(strength) < 1:
+            raise ValueError('Strength must not be empty')
+        return strength
 
     def __repr__(self):
         return f'<HeroPower {self.id}>'
