@@ -1,5 +1,5 @@
 
-from flask import Flask, request, make_response
+from flask import Flask, request
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from models import db, Hero, Power, HeroPower
@@ -43,24 +43,32 @@ class PowerListResource(Resource):
 
 class PowerResource(Resource):
     def get(self, id):
-        # Use db.session.get() to retrieve the power by ID
         power = db.session.get(Power, id)
         if power:
             return power.to_dict(), 200
         return {'error': 'Power not found'}, 404
 
     def patch(self, id):
-        power = db.session.get(Power, id)  # Use db.session.get() here too
+        power = db.session.get(Power, id)
         if not power:
             return {'error': 'Power not found'}, 404
 
         data = request.get_json()
+
+        # Validation for description
+        if 'description' in data:
+            description = data['description']
+            if not isinstance(description, str) or len(description) < 20:
+                return {'errors': ['validation errors']}, 400  # General validation error message
+
         try:
-            power.description = data['description']
+            if 'description' in data:
+                power.description = data['description']
             db.session.commit()
             return power.to_dict(), 200
         except ValueError as e:
             return {'errors': [str(e)]}, 400
+
 
 class HeroPowerResource(Resource):
     def post(self):
