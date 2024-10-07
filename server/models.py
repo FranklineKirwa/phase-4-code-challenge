@@ -32,7 +32,6 @@ class Hero(db.Model, SerializerMixin):
             hero_dict['hero_powers'] = [hp.to_dict() for hp in self.hero_powers]
         return hero_dict
 
-
 class Power(db.Model, SerializerMixin):
     __tablename__ = 'powers'
 
@@ -46,6 +45,17 @@ class Power(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<Power {self.id}>'
+
+    @staticmethod
+    def validate_description(description):
+        """Raise ValueError if description is too short."""
+        if not isinstance(description, str) or len(description) < 20:
+            raise ValueError("Description must be at least 20 characters long.")
+
+    def __init__(self, name, description, *args, **kwargs):
+        self.validate_description(description)
+        super().__init__(name=name, description=description, *args, **kwargs)
+
 
 class HeroPower(db.Model, SerializerMixin):
     __tablename__ = 'hero_powers'
