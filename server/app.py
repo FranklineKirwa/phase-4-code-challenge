@@ -5,17 +5,21 @@ from flask_restful import Api, Resource
 from models import db, Hero, Power, HeroPower
 import os
 
+# Define the base directory and the database URI
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get("DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
 
+# Define the base directory and the database URI
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE #set database URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
+app.json.compact = False ## Disable compact JSON response
 
+# Initialize database migration
 migrate = Migrate(app, db)
-db.init_app(app)
+db.init_app(app)# Bind the database to the app
 
+#create an api instance
 api = Api(app)
 
 @app.route('/')
@@ -24,13 +28,13 @@ def index():
 
 class HeroListResource(Resource):
     def get(self):
-        heroes = Hero.query.all()
-        return [hero.to_dict() for hero in heroes], 200
+        heroes = Hero.query.all()  # Query all heroes from the database
+        return [hero.to_dict() for hero in heroes], 200 # Return list of heroes as JSON
 
 class HeroResource(Resource):
     def get(self, id):
-        # Use db.session.get() to retrieve the hero by ID
-        hero = db.session.get(Hero, id)
+
+        hero = db.session.get(Hero, id)  # Retrieve hero by ID
         if hero:
             # Include hero_powers when retrieving a single hero
             return hero.to_dict(include_powers=True), 200
@@ -38,12 +42,12 @@ class HeroResource(Resource):
 
 class PowerListResource(Resource):
     def get(self):
-        powers = Power.query.all()
-        return [power.to_dict() for power in powers], 200
+        powers = Power.query.all() # Query all powers from the database
+        return [power.to_dict() for power in powers], 200 # Return list of powers as JSON
 
 class PowerResource(Resource):
     def get(self, id):
-        power = db.session.get(Power, id)
+        power = db.session.get(Power, id)  # Retrieve power by ID
         if power:
             return power.to_dict(), 200
         return {'error': 'Power not found'}, 404
@@ -59,7 +63,7 @@ class PowerResource(Resource):
         if 'description' in data:
             description = data['description']
             if not isinstance(description, str) or len(description) < 20:
-                return {'errors': ['validation errors']}, 400  # General validation error message
+                return {'errors': ['validation errors']}, 400  # validation error message
 
         try:
             if 'description' in data:
