@@ -53,9 +53,12 @@ class HeroPower(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     hero_id = db.Column(db.Integer, db.ForeignKey('heroes.id'), nullable=False)
     power_id = db.Column(db.Integer, db.ForeignKey('powers.id'), nullable=False)
+    strength = db.Column(db.String, nullable=False)
 
     serialize_rules = ('-hero_assoc', '-power_assoc',)
 
     def __repr__(self):
         return f'<HeroPower {self.id}>'
+
+
 

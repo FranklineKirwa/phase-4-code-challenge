@@ -73,7 +73,13 @@ class PowerResource(Resource):
 class HeroPowerResource(Resource):
     def post(self):
         data = request.get_json()
+
+        # Validation for strength
+        if data['strength'] not in ['Strong', 'Weak', 'Average']:
+            return {'errors': ['validation errors']}, 400
+
         try:
+            # Create the HeroPower
             hero_power = HeroPower(
                 hero_id=data['hero_id'],
                 power_id=data['power_id'],
@@ -81,9 +87,25 @@ class HeroPowerResource(Resource):
             )
             db.session.add(hero_power)
             db.session.commit()
-            return hero_power.to_dict(), 201
+
+            # Retrieve related Hero and Power
+            hero = db.session.get(Hero, data['hero_id'])
+            power = db.session.get(Power, data['power_id'])
+
+            # Return the HeroPower, Hero, and Power in the response
+            return {
+                'id': hero_power.id,
+                'strength': hero_power.strength,
+                'hero_id': hero_power.hero_id,
+                'power_id': hero_power.power_id,
+                'hero': hero.to_dict(),
+                'power': power.to_dict()
+            }, 201
         except ValueError as e:
             return {'errors': [str(e)]}, 400
+        except Exception as e:
+            return {'error': str(e)}, 500
+
 
 api.add_resource(HeroListResource, '/heroes')
 api.add_resource(HeroResource, '/heroes/<int:id>')
