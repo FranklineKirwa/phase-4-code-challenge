@@ -63,12 +63,31 @@ class HeroPower(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     hero_id = db.Column(db.Integer, db.ForeignKey('heroes.id'), nullable=False)
     power_id = db.Column(db.Integer, db.ForeignKey('powers.id'), nullable=False)
-    strength = db.Column(db.String, nullable=False)
+    _strength = db.Column('strength', db.String, nullable=False)
 
     serialize_rules = ('-hero_assoc', '-power_assoc',)
 
+    VALID_STRENGTHS = ['Strong', 'Weak', 'Average']
+
     def __repr__(self):
         return f'<HeroPower {self.id}>'
+
+    @property
+    def strength(self):
+        return self._strength
+
+    @strength.setter
+    def strength(self, value):
+        if value not in self.VALID_STRENGTHS:
+            raise ValueError(f"Invalid strength value: {value}. Must be one of {self.VALID_STRENGTHS}.")
+        self._strength = value
+
+    def __init__(self, hero_id, power_id, strength, *args, **kwargs):
+        self.hero_id = hero_id
+        self.power_id = power_id
+        self.strength = strength  
+        super().__init__(*args, **kwargs)
+
 
 
 
